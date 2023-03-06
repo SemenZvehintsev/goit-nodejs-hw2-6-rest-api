@@ -3,62 +3,96 @@ const path = require('path')
 
 const contactsPath = path.resolve('models/contacts.json')
 
-const listContacts = async () => {
+const parseContacts = async () => {
   try {
-    const contacts = await fs.readFile(contactsPath, 'utf-8');
+    const contacts = await fs.readFile(contactsPath, 'utf-8')
+    
     return JSON.parse(contacts)
   } catch (error) {
     console.log(error)
   }
 }
 
-const getContactById = async (contactId) => {
+const listContacts = async (req, res) => {
   try {
-    const contacts = await listContacts();
-    const contactFind = contacts.filter(contact => Number(contact.id) === Number(contactId));
-    return contactFind
+    const contacts = await parseContacts()
+
+    return res.status('200').json(contacts)
   } catch (error) {
     console.log(error)
   }
 }
 
-const removeContact = async (contactId) => {
+const getContactById = async (req, res) => {
+  const {contactId} = req.params;
   try {
-    const data = await listContacts();
-    const contactsUpdate = data.filter(contact => Number(contact.id) !== Number(contactId));
-    await fs.writeFile(contactsPath, JSON.stringify(contactsUpdate));
-    return data.length - contactsUpdate.length
-  } catch (error) {
+    const contacts = await parseContacts()
+    const [contactFind] = contacts.filter(contact => Number(contact.id) === Number(contactId))
+
+    if (!contactFind) {
+      return res.status('404').json({ "message": "Not found" })
+    }
+
+    return res.status('200').json(contactFind)
+  } 
+    catch (error) {
+    console.log(error)
+  }
+}
+
+const removeContact = async (req, res) => {
+
+  const {contactId} = req.params;
+
+  try {
+    const contacts = await parseContacts()
+    const contactsUpdate = contacts.filter(contact => Number(contact.id) !== Number(contactId))
+    await fs.writeFile(contactsPath, JSON.stringify(contactsUpdate))
+
+    if (contacts.length === contactsUpdate.length) {
+      return res.status('404').json({ 'message': 'not found' })
+    }
+
+    return   res.status('200').json({ 'message': 'contact deleted' })
+  } 
+    catch (error) {
     console.log(error)
   }  
 }
 
-const addContact = async ({name, email, phone}) => {
-  const id = Date.now()
-  const newContact = {id, name, email, phone};
+const addContact = async (req, res) => {
+
+  const {name, email, phone} = req.body
+  const id = Date.now().toString()
+  const newContact = {id, name, email, phone}
+
   try {
-      const data = await listContacts();
+      const data = await parseContacts();
       data.push(newContact);
       await fs.writeFile(contactsPath, JSON.stringify(data))
-      return newContact  
+
+      return res.status('201').json(newContact)  
   } catch (error) {
       console.log(error)
   }    
 }
 
-const updateContact = async (contactId, body) => {
+const updateContact = async (req, res) => {
+
+  const {contactId} = req.params
+
   try {
-    const data = await listContacts();
-    const contactIndex = data.map(({id})=> id).indexOf(contactId);
+    const data = await parseContacts()
+    const contactIndex = data.map(({id})=> id).indexOf(contactId)
 
     if (contactIndex < 0) {
-      return 
+      return res.status('404').json({ 'message': 'not found' })
     }
 
-    data[contactIndex] = {...data[contactIndex], ...body}
-    await fs.writeFile(contactsPath, JSON.stringify(data));
-    console.log(data[contactIndex], data)
-    return data[contactIndex]
+    data[contactIndex] = {...data[contactIndex], ...req.body}
+    await fs.writeFile(contactsPath, JSON.stringify(data))
+
+    return res.status('200').json(data[contactIndex]) 
   } catch (error) {
     console.log(error)
   }  
