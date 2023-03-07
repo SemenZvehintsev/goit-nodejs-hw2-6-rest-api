@@ -13,17 +13,14 @@ const validationAddContact = (req, res, next) => {
       email: Joi.string()
           .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } })
           .required(),
-      
-      phone: [
-        Joi.string().required(),
-        Joi.number().required()
-      ]
+      phone: Joi.string()    
+          .required()
     })
   
     const { error } = schema.validate({ name, email, phone });
   
     if (error) {
-      res.status('400').json({"message": `${error.details[0].message}`})
+      res.status('400').json({"message": `missing required ${error.details[0].context.key} field`})
       return
     }
 
@@ -46,10 +43,8 @@ const validationUpdContact = (req, res, next) => {
         email: Joi.string()
             .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } }),
         
-        phone: [
-        Joi.string(),
-        Joi.number()
-        ]
+        phone: Joi.string()
+
     })
 
     const { error } = schema.validate(req.body);
