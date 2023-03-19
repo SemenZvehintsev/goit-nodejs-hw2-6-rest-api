@@ -17,6 +17,6 @@ router.delete('/:contactId', asyncFuncCatch(removeContact))
 
 router.put('/:contactId', validationUpdContact, asyncFuncCatch(updateContact))
 
-router.patch('/:contactId', validationUpdStatusContact, asyncFuncCatch(updateStatusContact))
+router.patch('/:contactId/favorite', validationUpdStatusContact, asyncFuncCatch(updateStatusContact))
 
 module.exports = router
