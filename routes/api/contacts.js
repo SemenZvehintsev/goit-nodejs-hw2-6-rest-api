@@ -1,23 +1,22 @@
 const express = require('express')
-const path = require('path')
 
 const router = express.Router()
 
-const contactsPath = path.resolve('models/contacts.js')
-const validationPath = path.resolve('validation/validation.js')
-
-const {listContacts, getContactById, removeContact, addContact, updateContact} = require(contactsPath)
-const {validationAddContact, validationUpdContact} = require(validationPath)
+const {validationAddContact, validationUpdContact, validationUpdStatusContact} = require('../../middlewares/validation')
+const {listContacts, getContactById, removeContact, addContact, updateContact, updateStatusContact} = require('../../controllers/contactControllers')
+const asyncFuncCatch = require('../../middlewares/asyncFuncCatch')
 
 
-router.get('/', listContacts)
+router.get('/', asyncFuncCatch(listContacts))
 
-router.get('/:contactId', getContactById)
+router.get('/:contactId', asyncFuncCatch(getContactById))
 
-router.post('/', validationAddContact, addContact)
+router.post('/', validationAddContact, asyncFuncCatch(addContact))
 
-router.delete('/:contactId', removeContact)
+router.delete('/:contactId', asyncFuncCatch(removeContact))
 
-router.put('/:contactId', validationUpdContact, updateContact)
+router.put('/:contactId', validationUpdContact, asyncFuncCatch(updateContact))
+
+router.patch('/:contactId/favorite', validationUpdStatusContact, asyncFuncCatch(updateStatusContact))
 
 module.exports = router
