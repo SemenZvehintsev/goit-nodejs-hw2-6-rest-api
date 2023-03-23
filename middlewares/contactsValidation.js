@@ -88,4 +88,4 @@ const validationUpdStatusContact = (req, res, next) => {
     next()
 }
 
-module.exports = {validationAddContact, validationUpdContact, validationUpdStatusContact}
+module.exports = { validationAddContact, validationUpdContact, validationUpdStatusContact }
