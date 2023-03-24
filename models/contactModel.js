@@ -18,8 +18,12 @@ const contactSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    owner: {
+      type: Schema.ObjectId,
+      ref: 'user',
+    }
   },
-  { versionKey: false}
+  { versionKey: false }
 );
 
 const Contact = model('contacts', contactSchema);
