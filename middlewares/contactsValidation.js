@@ -14,7 +14,9 @@ const validationAddContact = (req, res, next) => {
         phone: Joi.string()    
             .required(),
         
-        favorite: Joi.boolean()
+        favorite: Joi.boolean(),
+
+        owner: Joi.string()  
     })
   
     const { error } = schema.validate(req.body);

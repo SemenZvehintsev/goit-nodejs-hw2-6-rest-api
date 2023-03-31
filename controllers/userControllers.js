@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken')
+const gravatar = require('gravatar')
+const Jimp = require('jimp')
+const path = require('path')
 const {User} = require('../models')
-  
+
+
 const addUser = async (req, res) => {
 
     const userIsExist = await User.findOne({email: req.body.email})
@@ -9,8 +13,12 @@ const addUser = async (req, res) => {
       res.status('409').json({"message": "Email in use"})
       return 
     }
-  
-    const user = await User.create(req.body)
+
+    const avatar = gravatar.url(req.body.email, {s: '250', r: 'g', d: 'robohash'}, true)
+
+    const newUser = {...req.body, avatar}
+
+    const user = await User.create(newUser)
 
     res.status('201').json({
       "user": {
@@ -75,8 +83,36 @@ const getUserDetails = async (req, res, next) => {
     "email": user.email,
     "subscription": user.subscription
   })
+}
+
+const updateUserAvatar = async (req, res, next) => {
+
+  const user = await User.findById(req.user._id)
+
+  if(!user) {
+    res.status('401').json({"message": "Not authorized"})
+    return
+  }
+
+  const newAvatarPath = path.join(process.cwd(), '/public/avatars', req.file.filename)
+
+  Jimp.read(req.file.path, function (err, avatar) {
+    if (err) throw err;
+    avatar
+     .resize(250, 250)
+     .write(newAvatarPath);
+    next();
+   });
+
+  const avatarUrl = `/avatars/${req.file.filename}`
+
+  user.avatarUrl = avatarUrl
+
+  await user.save()
+
+  res.status('200').json({"avatarURL": user.avatarUrl})
 
 }
   
-module.exports = { addUser, loginUser, logoutUser, getUserDetails }
+module.exports = { addUser, loginUser, logoutUser, getUserDetails, updateUserAvatar }
   

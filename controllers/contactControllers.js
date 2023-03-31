@@ -33,8 +33,8 @@ const removeContact = async (req, res) => {
 }
   
 const addContact = async (req, res) => {
-  
-    const newContact = await Contact.create(req.body)
+
+  const newContact = await Contact.create(req.body)
 
     res.status('201').json(newContact)  
 }
