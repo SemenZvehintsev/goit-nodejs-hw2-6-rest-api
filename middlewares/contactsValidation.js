@@ -14,13 +14,15 @@ const validationAddContact = (req, res, next) => {
         phone: Joi.string()    
             .required(),
         
-        favorite: Joi.boolean()
+        favorite: Joi.boolean(),
+
+        owner: Joi.string()  
     })
   
     const { error } = schema.validate(req.body);
   
     if (error) {
-      res.status('400').json({"message": `missing required ${error.details[0].context.key} field`})
+      res.status(400).json({"message": `missing required ${error.details[0].context.key} field`})
       return
     }
 
@@ -30,7 +32,7 @@ const validationAddContact = (req, res, next) => {
 const validationUpdContact = (req, res, next) => {
     
     if (!Object.keys(req.body).length) {
-        res.status('400').json({"message": "missing fields"})
+        res.status(400).json({"message": "missing fields"})
     return
     }
 
@@ -51,17 +53,16 @@ const validationUpdContact = (req, res, next) => {
 
     if (error) {
         const [{message}] = error.details
-        res.status('400').json({"message": `huy ${message}`})
+        res.status(400).json({"message": `${message}`})
         return
     }
-    console.log('validation is ok')
     next()
 }
 
 const validationUpdStatusContact = (req, res, next) => {
 
     if (!req.body.favorite) {
-        res.status('400').json({"message": "missing field favorite"})
+        res.status(400).json({"message": "missing field favorite"})
     return
     }
 
@@ -81,7 +82,7 @@ const validationUpdStatusContact = (req, res, next) => {
     const { error } = schema.validate(req.body);
   
     if (error) {
-      res.status('400').json({"message": `missing required ${error.details[0].context.key} field`})
+      res.status(400).json({"message": `missing required ${error.details[0].context.key} field`})
       return
     }
 

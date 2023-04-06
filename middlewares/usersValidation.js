@@ -18,7 +18,7 @@ const userValidation = (req, res, next) => {
     const { error } = schema.validate(req.body);
   
     if (error) {
-      res.status('400').json({'message': error.details[0].message})
+      res.status(400).json({'message': error.details[0].message})
       return
     }
 
@@ -34,14 +34,14 @@ const userTokenValidation = async (req, res, next) => {
     try {    
         userDetails = jwt.verify(token, process.env.JWT_SECRET)
     } catch(err) {
-        res.status('401').json({"message": "Not authorized"})
+        res.status(401).json({"message": "Not authorized"})
         return
     }
 
     const user = await User.findById(userDetails.id)
 
     if(!user) {
-        res.status('401').json({"message": "Not authorized"})
+        res.status(401).json({"message": "Not authorized"})
         return
     }
 
