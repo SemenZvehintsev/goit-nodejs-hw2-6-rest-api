@@ -1,28 +1,24 @@
 const jwt = require('jsonwebtoken')
-const gravatar = require('gravatar')
-const Jimp = require('jimp')
-const path = require('path')
 const {User} = require('../models')
+const { addServices, sendVerify, newAvatarURL } = require('../utils')
 
 
 const addUser = async (req, res) => {
 
-    const userIsExist = await User.findOne({email: req.body.email})
+  const userIsExist = await User.findOne({email: req.body.email})
 
-    if (userIsExist) {
-      res.status(409).json({"message": "Email in use"})
-      return 
-    }
+  if (userIsExist) {
+    res.status(409).json({"message": "Email in use"})
+    return 
+  }
+  
+  const newUser = addServices(req.body)
 
-    const avatar = gravatar.url(req.body.email, {s: '250', r: 'g', d: 'robohash'}, true)
+  const {email, subscription, avatarURL, verificationToken} = await User.create(newUser)
 
-    const newUser = {...req.body, avatarURL: avatar}
+  sendVerify(email, verificationToken)
 
-    const {email, subscription, avatarURL} = await User.create(newUser)
-
-
-    res.status(201).json({
-      "user": {email, subscription, avatarURL}})
+  res.status(201).json({"user": {email, subscription, avatarURL}})
 }
 
 const loginUser = async (req, res) => {
@@ -31,6 +27,11 @@ const loginUser = async (req, res) => {
 
   if (!user) {
     res.status(401).json({"message": "Email or password is wrong"})
+    return 
+  }
+
+  if (!user.verify) {
+    res.status(401).json({"message": "User is not verified"})
     return 
   }
 
@@ -50,7 +51,7 @@ const loginUser = async (req, res) => {
     "user": {email, subscription, avatarURL}})
 }
 
-const logoutUser = async (req, res, next) => {
+const logoutUser = async (req, res) => {
 
   const user = await User.findById(req.user._id)
 
@@ -65,7 +66,7 @@ const logoutUser = async (req, res, next) => {
   res.status(204).send()
 }
 
-const getUserDetails = async (req, res, next) => {
+const getUserDetails = async (req, res) => {
   
   const user = await User.findById(req.user._id)
 
@@ -79,7 +80,7 @@ const getUserDetails = async (req, res, next) => {
   res.status(200).json({email, subscription, avatarURL})
 }
 
-const updateUserAvatar = async (req, res, next) => {
+const updateUserAvatar = async (req, res) => {
 
   const user = await User.findById(req.user._id)
 
@@ -88,25 +89,37 @@ const updateUserAvatar = async (req, res, next) => {
     return
   }
 
-  const newAvatarPath = path.join(process.cwd(), '/public/avatars', req.file.filename)
-
-  Jimp.read(req.file.path, function (err, avatar) {
-    if (err) throw err;
-    avatar
-     .resize(250, 250)
-     .write(newAvatarPath);
-    next();
-   });
-
-  const newAvatarURL = `/avatars/${req.file.filename}`
-
-  user.avatarURL = newAvatarURL
-
+  user.avatarURL = newAvatarURL(req.file)
   await user.save()
 
   res.status(200).json({"avatarURL": user.avatarURL})
 
 }
+
+const verifyUser = async (req, res) => {
+
+  const user = await User.findOne({verificationToken: req.params.verificationToken})
+
+  if(!user) {
+    res.status(404).json({"message": "User not found"})
+    return
+  }
+
+  user.verificationToken = null
+  user.verify = true
+  await user.save()
+
+  res.status(200).json({"message": "Verification successful"})
+}
+
+const reVerifyUser = async (req, res) => {
+
+  const { email, verificationToken } = req.body.user
+
+  sendVerify(email, verificationToken)
+
+  res.status(200).json({"message": "Verification email sent"})
+}
   
-module.exports = { addUser, loginUser, logoutUser, getUserDetails, updateUserAvatar }
+module.exports = { addUser, loginUser, logoutUser, getUserDetails, updateUserAvatar, verifyUser, reVerifyUser }
   
