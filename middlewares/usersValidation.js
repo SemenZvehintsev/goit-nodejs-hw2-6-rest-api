@@ -50,4 +50,40 @@ const userTokenValidation = async (req, res, next) => {
     next()
 }
 
-module.exports = {userValidation, userTokenValidation}
+const userVerificationValidation = (req, res, next) => {
+    
+    const schema = Joi.object({  
+        verificationToken: Joi.string()
+            .required(),
+    })
+
+    const { error } = schema.validate(req.params);
+
+    if (error) {
+      res.status(400).json({'message': error.details[0].message})
+      return
+    }
+
+    next()
+}
+
+const userReVerificationValidation = async (req, res, next) => {
+    
+    if (!req.body.email) {
+        res.status(400).json({"message": "missing required field email"})
+        return
+    }
+
+    const user = await User.findOne({email: req.body.email})
+
+    if (user.verify) {
+        res.status(200).json({"message": "Verification has already been passed"})
+        return
+    }
+
+    req.body.user = user
+
+    next()
+}
+
+module.exports = {userValidation, userTokenValidation, userVerificationValidation, userReVerificationValidation }
